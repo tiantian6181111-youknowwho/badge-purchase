@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍡 金属徽章台账</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Microsoft YaHei","PingFang SC","Nunito",sans-serif;background:linear-gradient(135deg,#FFF7FB 0%,#F8F0FF 50%,#F0FAFF 100%);background-attachment:fixed;color:#5A4F75;font-size:13px;min-height:100vh;padding-bottom:40px}
+
+/* ---- 顶部导航 ---- */
+header{background:linear-gradient(135deg,#FFB5C9 0%,#D4A5F5 50%,#A5B5F5 100%);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;box-shadow:0 3px 15px rgba(212,165,245,0.35);position:sticky;top:0;z-index:100}
+header h1{color:#fff;font-size:18px;text-shadow:1px 1px 2px rgba(0,0,0,0.1)}
+.header-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:6px 12px;border:none;border-radius:8px;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:600}
+.btn-primary{background:#fff;color:#D4A5F5}
+.btn-primary:hover{background:#F0E6FF;transform:translateY(-1px)}
+
+/* ---- 统计与筛选栏 ---- */
+.stats-bar{background:#fff;margin:15px 20px 0;padding:15px 20px;border-radius:16px;display:flex;justify-content:center;gap:30px;box-shadow:0 4px 15px rgba(212,165,245,0.12);flex-wrap:wrap}
+.stat-item{font-size:14px;color:#5A4F75}
+.stat-item span{font-weight:800;color:#D4A5F5;font-size:16px;margin-left:4px}
+
+.filter-bar{background:#fff;margin:15px 20px 0;padding:12px 20px;border-radius:16px;display:flex;align-items:center;gap:15px;box-shadow:0 4px 15px rgba(212,165,245,0.12)}
+.filter-bar label{font-size:13px;font-weight:600;color:#7A6C9F}
+.filter-bar select{padding:6px 12px;border:1.5px solid #E8DFF5;border-radius:8px;font-size:13px;color:#5A4F75;background:#FFF7FB;outline:none;transition:border 0.2s}
+.filter-bar select:focus{border-color:#D4A5F5}
+
+/* ---- 主内容区 ---- */
+main{padding:20px;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+
+/* ---- 车辆卡片 ---- */
+.card{background:#fff;border-radius:20px;padding:20px;box-shadow:0 4px 15px rgba(212,165,245,0.12);transition:all 0.25s;border:2px solid transparent;position:relative}
+.card:hover{transform:translateY(-4px);box-shadow:0 8px 25px rgba(212,165,245,0.2);border-color:#E8DFF5}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.car-info h2{font-size:16px;color:#D4A5F5;margin-bottom:4px}
+.car-ip{font-size:12px;color:#998BB5;background:#F8F0FF;padding:2px 8px;border-radius:6px;font-weight:600;display:inline-block}
+.card-btns{display:flex;gap:8px}
+.icon-btn{width:32px;height:32px;border-radius:50%;border:none;background:#FFF7FB;color:#D4A5F5;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.2s}
+.icon-btn:hover{background:#D4A5F5;color:#fff;transform:scale(1.1)}
+.icon-btn.del:hover{background:#FF9B9B;color:#fff}
+
+/* ---- 图片区域 ---- */
+.card-images{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px}
+.card-img{width:calc(50% - 4px);aspect-ratio:1;object-fit:cover;border-radius:10px;border:1.5px solid #F0E6FF;cursor:pointer;transition:transform 0.2s}
+.card-img:hover{transform:scale(1.05)}
+
+/* ---- 工艺明细表格 ---- */
+.detail-table{width:100%;border-collapse:collapse;margin-bottom:15px;font-size:12px}
+.detail-table th{text-align:left;padding:8px 4px;color:#998BB5;font-weight:600;border-bottom:1.5px solid #F0E6FF}
+.detail-table td{padding:8px 4px;color:#5A4F75;border-bottom:1px solid #F9F4FF}
+.detail-table td.num{text-align:right;font-weight:700}
+.detail-table td.name{font-weight:600;color:#7A6C9F}
+
+.card-footer{text-align:right;padding-top:12px;border-top:1.5px solid #F0E6FF;display:flex;justify-content:flex-end;align-items:center;gap:8px}
+.car-total-label{font-size:12px;color:#998BB5}
+.car-total{font-size:18px;font-weight:800;color:#FF85A2}
+
+/* ---- 弹窗表单 ---- */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(90,79,117,0.4);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;width:100%;max-width:500px;max-height:90vh;border-radius:20px;padding:25px;overflow-y:auto;box-shadow:0 10px 40px rgba(212,165,245,0.3);position:relative}
+.modal h3{text-align:center;font-size:18px;color:#D4A5F5;margin-bottom:20px}
+.close-btn{position:absolute;top:15px;right:15px;width:30px;height:30px;border-radius:50%;border:none;background:#F0E6FF;color:#D4A5F5;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.close-btn:hover{background:#D4A5F5;color:#fff}
+
+.form-group{margin-bottom:15px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:#7A6C9F;margin-bottom:6px}
+.form-group input,.form-group select{width:100%;padding:10px 12px;border:1.5px solid #E8DFF5;border-radius:10px;font-size:13px;color:#5A4F75;background:#FFF7FB;outline:none;transition:all 0.2s}
+.form-group input:focus{border-color:#D4A5F5;background:#fff}
+
+.sub-section{background:#FDF9FF;border-radius:12px;padding:15px;margin-bottom:15px;border:1.5px dashed #E8DFF5}
+.sub-section-title{font-size:13px;font-weight:700;color:#D4A5F5;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+.row-item{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.row-item input{flex:1;padding:8px 10px;border:1.5px solid #F0E6FF;border-radius:8px;font-size:12px;outline:none;background:#fff}
+.row-item input:focus{border-color:#D4A5F5}
+.row-item input[type="number"]{width:70px;flex:none}
+.remove-row{width:24px;height:24px;border-radius:50%;border:none;background:#FFE5E5;color:#FF6B6B;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.remove-row:hover{background:#FF6B6B;color:#fff}
+
+.add-row-btn{width:100%;padding:8px;border:1.5px dashed #D4A5F5;background:transparent;color:#D4A5F5;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;transition:all 0.2s}
+.add-row-btn:hover{background:#F0E6FF}
+
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.modal-footer .btn{padding:10px 20px;border-radius:10px;font-size:13px}
+.btn-cancel{background:#F0E6FF;color:#7A6C9F}
+.btn-cancel:hover{background:#E8DFF5}
+.btn-save{background:linear-gradient(135deg,#FFB5C9,#D4A5F5);color:#fff;box-shadow:0 4px 12px rgba(212,165,245,0.4)}
+.btn-save:hover{transform:translateY(-1px);box-shadow:0 6px 15px rgba(212,165,245,0.5)}
+
+.empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:#B0A3CC}
+.empty-state svg{width:80px;height:80px;margin-bottom:15px;opacity:0.5}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍡 金属徽章台账</h1>
+  <div class="header-btns">
+    <button class="btn btn-primary" onclick="exportJSON()">导出 JSON</button>
+    <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">导入 JSON</button>
+    <button class="btn btn-primary" onclick="exportCSV()">导出 CSV</button>
+    <button class="btn btn-primary" onclick="openModal()" style="background:#fff;color:#FF85A2">＋ 新增车辆</button>
+  </div>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
+</header>
+
+<div class="stats-bar">
+  <div class="stat-item">共 <span id="statCars">0</span> 车</div>
+  <div class="stat-item">共 <span id="statBadges">0</span> 枚</div>
+  <div class="stat-item">总金额 <span id="statTotal">¥0.00</span></div>
+</div>
+
+<div class="filter-bar">
+  <label for="ipFilter">🔍 筛选 IP：</label>
+  <select id="ipFilter" onchange="render()">
+    <option value="all">全部 IP</option>
+  </select>
+</div>
+
+<main id="cardList"></main>
+
+<!-- 弹窗 -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal()">×</button>
+    <h3 id="modalTitle">新增车辆</h3>
+    
+    <div class="form-group">
+      <label>车名（如：折星·会给你添麻烦吗）</label>
+      <input type="text" id="fCarName" placeholder="请输入车名">
+    </div>
+    <div class="form-group">
+      <label>IP 名称</label>
+      <input type="text" id="fIp" placeholder="请输入 IP（如：明日方舟、凹凸世界等）">
+    </div>
+    <div class="form-group">
+      <label>邮费</label>
+      <input type="number" id="fPostage" placeholder="例：10" min="0" step="0.01">
+    </div>
+
+    <!-- 图片列表 -->
+    <div class="sub-section">
+      <div class="sub-section-title">🖼️ 图片链接</div>
+      <div id="imgRows"></div>
+      <button class="add-row-btn" onclick="addImgRow()">＋ 添加图片行</button>
+    </div>
+
+    <!-- 工艺明细 -->
+    <div class="sub-section">
+      <div class="sub-section-title">✨ 工艺明细</div>
+      <div id="badgeRows"></div>
+      <button class="add-row-btn" onclick="addBadgeRow()">＋ 添加工艺行</button>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn btn-save" onclick="saveData()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let cars = JSON.parse(localStorage.getItem('badgeCars') || '[]');
+let editingId = null;
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+function saveToLocal() {
+  localStorage.setItem('badgeCars', JSON.stringify(cars));
+}
+
+// 渲染页面
+function render() {
+  const list = document.getElementById('cardList');
+  const filterIp = document.getElementById('ipFilter').value;
+  
+  // 1. 统计计算
+  let totalCars = 0, totalBadges = 0, totalMoney = 0;
+  
+  list.innerHTML = '';
+  
+  const filteredCars = filterIp === 'all' ? cars : cars.filter(c => c.ip === filterIp);
+  
+  // 更新筛选下拉框选项（收集所有IP）
+  updateIpFilter();
+
+  if (filteredCars.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <p>暂无数据，点击右上角“新增车辆”开始记账吧！</p>
+    </div>`;
+  }
+
+  filteredCars.forEach(car => {
+    let carBadgeCost = 0; // 这辆车徽章本身的总价
+    let carBadgeQty = 0;  // 这辆车徽章总件数
+
+    let badgeHtml = `<table class="detail-table"><thead><tr><th>徽章名</th><th>均摊</th><th>大货</th><th style="text-align:right">购买数量</th></tr></thead><tbody>`;
+    
+    (car.badges || []).forEach(b => {
+      const share = parseFloat(b.share) || 0;
+      const bulk = parseFloat(b.bulk) || 0;
+      const qty = parseInt(b.qty) || 0;
+      const cost = (share + bulk) * qty;
+      
+      carBadgeCost += cost;
+      carBadgeQty += qty;
+      
+      badgeHtml += `<tr>
+        <td class="name">${b.name || '-'}</td>
+        <td>¥${share.toFixed(2)}</td>
+        <td>¥${bulk.toFixed(2)}</td>
+        <td class="num">${qty}</td>
+      </tr>`;
+    });
+    badgeHtml += `</tbody></table>`;
+
+    const postage = parseFloat(car.postage) || 0;
+    const carTotal = carBadgeCost + postage;
+
+    // 累加全局统计
+    totalCars++;
+    totalBadges += carBadgeQty;
+    totalMoney += carTotal;
+
+    // 图片显示
+    let imgHtml = '';
+    if (car.images && car.images.length > 0) {
+      imgHtml = '<div class="card-images">';
+      car.images.forEach(url => {
+        if (url) imgHtml += `<img class="card-img" src="${url}" onclick="window.open('${url}')">`;
+      });
+      imgHtml += '</div>';
+    }
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="car-info">
+          <h2>${car.carName || '未命名车'}</h2>
+          ${car.ip ? `<span class="car-ip">IP: ${car.ip}</span>` : ''}
+        </div>
+        <div class="card-btns">
+          <button class="icon-btn" onclick="editCar('${car.id}')" title="编辑">✎</button>
+          <button class="icon-btn del" onclick="deleteCar('${car.id}')" title="删除">×</button>
+        </div>
+      </div>
+      ${imgHtml}
+      ${badgeHtml}
+      <div class="card-footer">
+        <span class="car-total-label">整车总价 (含邮费 ¥${postage.toFixed(2)})</span>
+        <span class="car-total">¥${carTotal.toFixed(2)}</span>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  document.getElementById('statCars').innerText = totalCars;
+  document.getElementById('statBadges').innerText = totalBadges;
+  document.getElementById('statTotal').innerText = '¥' + totalMoney.toFixed(2);
+}
+
+// 更新 IP 筛选项
+function updateIpFilter() {
+  const select = document.getElementById('ipFilter');
+  const currentVal = select.value;
+  const ips = [...new Set(cars.map(c => c.ip).filter(ip => ip))];
+  
+  select.innerHTML = '<option value="all">全部 IP</option>';
+  ips.forEach(ip => {
+    select.innerHTML += `<option value="${ip}">${ip}</option>`;
+  });
+  
+  if (ips.includes(currentVal)) {
+    select.value = currentVal;
+  }
+}
+
+// 弹窗控制
+function openModal(id = null) {
+  editingId = id;
+  document.getElementById('modalTitle').innerText = id ? '编辑车辆' : '新增车辆';
+  
+  if (id) {
+    const car = cars.find(c => c.id === id);
+    document.getElementById('fCarName').value = car.carName || '';
+    document.getElementById('fIp').value = car.ip || '';
+    document.getElementById('fPostage').value = car.postage || '';
+    
+    // 填充图片
+    document.getElementById('imgRows').innerHTML = '';
+    (car.images || []).forEach(url => addImgRow(url));
+    if ((car.images || []).length === 0) addImgRow();
+    
+    // 填充徽章
+    document.getElementById('badgeRows').innerHTML = '';
+    (car.badges || []).forEach(b => addBadgeRow(b));
+    if ((car.badges || []).length === 0) addBadgeRow();
+  } else {
+    document.getElementById('fCarName').value = '';
+    document.getElementById('fIp').value = '';
+    document.getElementById('fPostage').value = '';
+    document.getElementById('imgRows').innerHTML = '';
+    document.getElementById('badgeRows').innerHTML = '';
+    addImgRow();
+    addBadgeRow();
+  }
+  
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  editingId = null;
+}
+
+function addImgRow(val = '') {
+  const div = document.createElement('div');
+  div.className = 'row-item';
+  div.innerHTML = `<input type="text" placeholder="粘贴图片链接" class="img-url" value="${val}"><button class="remove-row" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('imgRows').appendChild(div);
+}
+
+function addBadgeRow(data = {}) {
+  const div = document.createElement('div');
+  div.className = 'row-item';
+  div.innerHTML = `
+    <input type="text" placeholder="徽章名" class="b-name" value="${data.name || ''}">
+    <input type="number" placeholder="均摊" class="b-share" value="${data.share || ''}" min="0" step="0.01">
+    <input type="number" placeholder="大货" class="b-bulk" value="${data.bulk || ''}" min="0" step="0.01">
+    <input type="number" placeholder="数量" class="b-qty" value="${data.qty || ''}" min="0">
+    <button class="remove-row" onclick="this.parentElement.remove()">×</button>
+  `;
+  document.getElementById('badgeRows').appendChild(div);
+}
+
+function saveData() {
+  const carName = document.getElementById('fCarName').value.trim();
+  const ip = document.getElementById('fIp').value.trim();
+  const postage = parseFloat(document.getElementById('fPostage').value) || 0;
+  
+  const images = Array.from(document.querySelectorAll('.img-url')).map(i => i.value.trim()).filter(v => v);
+  
+  const badges = [];
+  document.querySelectorAll('#badgeRows .row-item').forEach(row => {
+    const name = row.querySelector('.b-name').value.trim();
+    const share = parseFloat(row.querySelector('.b-share').value) || 0;
+    const bulk = parseFloat(row.querySelector('.b-bulk').value) || 0;
+    const qty = parseInt(row.querySelector('.b-qty').value) || 0;
+    if (name) badges.push({ name, share, bulk, qty });
+  });
+
+  if (!carName) return alert('请输入车名！');
+
+  if (editingId) {
+    const idx = cars.findIndex(c => c.id === editingId);
+    cars[idx] = { ...cars[idx], carName, ip, postage, images, badges };
+  } else {
+    cars.push({ id: genId(), carName, ip, postage, images, badges });
+  }
+
+  saveToLocal();
+  closeModal();
+  render();
+}
+
+function editCar(id) { openModal(id); }
+
+function deleteCar(id) {
+  if (confirm('确定要删除这辆车吗？')) {
+    cars = cars.filter(c => c.id !== id);
+    saveToLocal();
+    render();
+  }
+}
+
+// 导入导出功能
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(cars, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `徽章台账_${new Date().toLocaleDateString()}.json`;
+  a.click();
+}
+
+function importJSON(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (Array.isArray(data)) {
+        cars = data;
+        saveToLocal();
+        render();
+        alert('导入成功！');
+      }
+    } catch (err) { alert('文件格式错误！'); }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function exportCSV() {
+  let csv = '\uFEFF车名,IP,徽章名,均摊,大货,购买数量,单枚总价,邮费,整车总价\n';
+  cars.forEach(car => {
+    const postage = parseFloat(car.postage) || 0;
+    let carTotal = postage;
+    (car.badges || []).forEach(b => {
+      const share = parseFloat(b.share) || 0;
+      const bulk = parseFloat(b.bulk) || 0;
+      const qty = parseInt(b.qty) || 0;
+      const cost = (share + bulk) * qty;
+      carTotal += cost;
+      csv += `"${car.carName}","${car.ip || ''}","${b.name}",${share},${bulk},${qty},${cost},${postage},${carTotal}\n`;
+    });
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `徽章台账_${new Date().toLocaleDateString()}.csv`;
+  a.click();
+}
+
+// 初始化
+render();
+</script>
+</body>
+</html>
