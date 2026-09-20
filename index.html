@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🍡 金属徽章台账</title>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,"Microsoft YaHei","PingFang SC","Nunito",sans-serif;background:linear-gradient(135deg,#FFF7FB 0%,#F8F0FF 50%,#F0FAFF 100%);background-attachment:fixed;color:#5A4F75;font-size:13px;min-height:100vh;padding-bottom:40px}
 
 /* ---- 顶部导航 ---- */
 header{background:linear-gradient(135deg,#FFB5C9 0%,#D4A5F5 50%,#A5B5F5 100%);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;box-shadow:0 3px 15px rgba(212,165,245,0.35);position:sticky;top:0;z-index:100}
-header h1{color:#fff;font-size:18px;text-shadow:1px 1px 2px rgba(0,0,0,0.1)}
+header h1{color:#fff;font-size:18px;text-shadow:1px 1px 2px rgba(0,0,0,0.1);width:100%;text-align:center;font-family:'ZCOOL XiaoWei',sans-serif}
 .header-btns{display:flex;gap:8px;flex-wrap:wrap}
 .btn{padding:6px 12px;border:none;border-radius:8px;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:600}
 .btn-primary{background:#fff;color:#D4A5F5}
@@ -25,6 +26,9 @@ header h1{color:#fff;font-size:18px;text-shadow:1px 1px 2px rgba(0,0,0,0.1)}
 .filter-bar label{font-size:13px;font-weight:600;color:#7A6C9F}
 .filter-bar select{padding:6px 12px;border:1.5px solid #E8DFF5;border-radius:8px;font-size:13px;color:#5A4F75;background:#FFF7FB;outline:none;transition:border 0.2s}
 .filter-bar select:focus{border-color:#D4A5F5}
+.search-bar{background:#fff;margin:15px 20px 0;padding:12px 20px;border-radius:16px;display:flex;justify-content:center;box-shadow:0 4px 15px rgba(212,165,245,0.12)}
+.search-bar input{width:100%;max-width:400px;padding:10px 15px;border:1.5px solid #E8DFF5;border-radius:10px;font-size:13px;color:#5A4F75;background:#FFF7FB;outline:none;transition:all 0.2s}
+.search-bar input:focus{border-color:#D4A5F5;background:#fff}
 
 /* ---- 主内容区 ---- */
 main{padding:20px;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
@@ -112,6 +116,10 @@ main{padding:20px;max-width:1200px;margin:0 auto;display:grid;grid-template-colu
   <div class="stat-item">总金额 <span id="statTotal">¥0.00</span></div>
 </div>
 
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="搜索徽章名或车名..." oninput="render()">
+</div>
+
 <div class="filter-bar">
   <label for="ipFilter">🔍 筛选 IP：</label>
   <select id="ipFilter" onchange="render()">
@@ -181,7 +189,14 @@ function render() {
   
   list.innerHTML = '';
   
-  const filteredCars = filterIp === 'all' ? cars : cars.filter(c => c.ip === filterIp);
+  const searchText = document.getElementById('searchInput').value.toLowerCase();
+  let filteredCars = filterIp === 'all' ? cars : cars.filter(c => c.ip === filterIp);
+  if (searchText) {
+    filteredCars = filteredCars.filter(c => 
+      (c.carName && c.carName.toLowerCase().includes(searchText)) ||
+      (c.badges && c.badges.some(b => b.name && b.name.toLowerCase().includes(searchText)))
+    );
+  }
   
   // 更新筛选下拉框选项（收集所有IP）
   updateIpFilter();
