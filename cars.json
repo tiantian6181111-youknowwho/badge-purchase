@@ -1,1 +1,19 @@
-[]
+[
+  {
+    "id": "muc0slgpgkopff",
+    "carName": "鬼灭叠叠乐【二车】",
+    "ip": "鬼灭",
+    "postage": 0,
+    "images": [
+      "https://s41.ax1x.com/2026/09/21/pnQcpB6.jpg"
+    ],
+    "badges": [
+      {
+        "name": "本体",
+        "share": 6.07,
+        "bulk": 24,
+        "qty": 1
+      }
+    ]
+  }
+]
