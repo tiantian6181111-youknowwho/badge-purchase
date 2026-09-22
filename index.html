@@ -433,17 +433,21 @@ function importJSON(input) {
 }
 
 function exportCSV() {
-  let csv = '\uFEFF车名,IP,徽章名,均摊,大货,购买数量,单枚总价,邮费,整车总价\n';
+  let csv = '\uFEFF车名,IP,徽章名,均摊,大货,购买数量,单枚总价,邮费,整车总价,图片链接\n';
   cars.forEach(car => {
     const postage = parseFloat(car.postage) || 0;
     let carTotal = postage;
+    // 把多张图片链接用分号拼接
+    const images = (car.images || []).join('; ');
     (car.badges || []).forEach(b => {
       const share = parseFloat(b.share) || 0;
       const bulk = parseFloat(b.bulk) || 0;
       const qty = parseInt(b.qty) || 0;
       const cost = (share + bulk) * qty;
       carTotal += cost;
-      csv += `"${car.carName}","${car.ip || ''}","${b.name}",${share},${bulk},${qty},${cost},${postage},${carTotal}\n`;
+      // 对图片链接中的双引号做转义，防止CSV格式错乱
+      const imagesEscaped = images.replace(/"/g, '""');
+      csv += `"${car.carName}","${car.ip || ''}","${b.name}",${share},${bulk},${qty},${cost},${postage},${carTotal},"${imagesEscaped}"\n`;
     });
   });
   const blob = new Blob([csv], { type: 'text/csv' });
@@ -452,7 +456,6 @@ function exportCSV() {
   a.download = `徽章台账_${new Date().toLocaleDateString()}.csv`;
   a.click();
 }
-
 // 初始化
 render();
 </script>
