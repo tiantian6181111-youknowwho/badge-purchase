@@ -98,6 +98,7 @@ main{padding:20px;max-width:1200px;margin:0 auto;display:grid;grid-template-colu
 </style>
 </head>
 <body>
+<div id="status" style="padding:8px 16px;background:#fffbe6;font-size:13px;border-bottom:1px solid #eee;"></div>
 
 <header>
   <h1>🍡 金属徽章台账</h1>
@@ -172,18 +173,40 @@ main{padding:20px;max-width:1200px;margin:0 auto;display:grid;grid-template-colu
 <script>
 let cars = []; // 先定义一个空数组
 
-// 尝试从仓库里下载最新的 cars.json
+let cars = [];
+const STORAGE_KEY = 'badgeCars';
+
+function loadLocal() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+}
+
+function showStatus(msg) {
+  const el = document.getElementById('status');
+  if (el) el.textContent = msg;
+}
+
+// 加载：优先合并本地数据（防止云端覆盖导致丢数据）
 fetch('./cars.json?t=' + new Date().getTime())
-  .then(res => res.json())
-  .then(data => {
-    cars = data; // 如果下载成功，就用云端数据
-    render();    // 重新渲染页面
+  .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+  .then(remote => {
+    const local = loadLocal();
+    const map = {};
+    // 先放云端数据
+    (Array.isArray(remote) ? remote : []).forEach(c => { map[c.id] = c; });
+    // 本地数据覆盖云端（本地是最新的用户操作）
+    local.forEach(c => { map[c.id] = c; });
+    cars = Object.values(map);
+    saveToLocal();
+    render();
+    showStatus(local.length > 0 ? '当前显示本机数据（已合并）' : '已加载仓库数据');
   })
   .catch(() => {
-    // 如果仓库里还没有 cars.json（比如第一次用），就读取本地数据
-    cars = JSON.parse(localStorage.getItem('badgeCars') || '[]');
-    render();    // 重新渲染页面
-  });let editingId = null;
+    cars = loadLocal();
+    render();
+    showStatus('未连到仓库，显示本机缓存');
+  });
+
+let editingId = null;
 
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
@@ -411,6 +434,7 @@ function exportJSON() {
   a.href = URL.createObjectURL(blob);
   a.download = `徽章台账_${new Date().toLocaleDateString()}.json`;
   a.click();
+  showStatus('已导出，请尽快上传回仓库');
 }
 
 function importJSON(input) {
@@ -425,6 +449,7 @@ function importJSON(input) {
         saveToLocal();
         render();
         alert('导入成功！');
+        showStatus('已导入，记得上传回仓库同步');
       }
     } catch (err) { alert('文件格式错误！'); }
   };
